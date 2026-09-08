@@ -1,0 +1,235 @@
+#src/bayan/preprocessing/core.py
+
+import re
+import unicodedata
+
+PREPROC_VERSION = "1.2.0"
+
+_TATWEEL = "ـ"
+
+_PHONE_RE = re.compile(r"(?:\+?966|0)5\d{8}")
+_NATIONAL_ID_RE = re.compile(r"\b[12]\d{9}\b")
+
+_MULTISPACE_RE = re.compile(r"\s+")
+_REPEAT_RE = re.compile(r"(.)\1{2,}")
+
+
+def normalize(text: str) -> str:
+    """Return deterministic Bayan normalisation while preserving task signal."""
+
+    # 1) Unicode normalization
+    text = unicodedata.normalize("NFC", text)
+
+    # 2) Remove tatweel
+    text = text.replace(_TATWEEL, "")
+
+    # 3) Collapse repeated characters to maximum 2
+    text = _REPEAT_RE.sub(r"\1\1", text)
+
+    # 4) Normalize whitespace
+    text = _MULTISPACE_RE.sub(" ", text).strip()
+
+    return text
+
+
+def mask_pii(text: str) -> str:
+    """Mask supported phone numbers and Saudi national-ID-shaped values."""
+
+    text = _PHONE_RE.sub("<PHONE>", text)
+    text = _NATIONAL_ID_RE.sub("<NATIONAL_ID>", text)
+
+    return text
+
+
+def preprocess(text: str) -> str:
+    """Apply the shared train/eval/serve preprocessing contract."""
+
+    return normalize(mask_pii(text))
+
+
+#test it using pytest tests/test_preprocessing.py -q
+
+####################################################################################################################################
+####################################################################################################################################
+
+
+#src/bayan/preprocessing/segmentation.py
+
+import spacy
+
+from bayan.preprocessing.core import preprocess
+
+
+def build_pipeline():
+    # Blank multilingual spaCy pipeline.
+    nlp = spacy.blank("xx")
+
+    # Add lightweight sentence segmentation component.
+    nlp.add_pipe("sentencizer") #set end & start of sentence by . ? !
+
+    return nlp
+
+
+def split_sentences(raw: str, nlp) -> list[str]:
+    # Important: use the same preprocessing contract first.
+    text = preprocess(raw)
+
+    doc = nlp(text)
+
+    return [
+        sent.text.strip()
+        for sent in doc.sents
+        if sent.text.strip()
+    ]
+    
+    
+"""
+test it using : 
+in cmd write:
+1-
+python
+
+2-
+from bayan.preprocessing.segmentation import build_pipeline, split_sentences
+nlp = build_pipeline()
+text = "الخدمة ممتازة. لكن التطبيق بطيء. أرجو حل المشكلة."
+print(split_sentences(text, nlp))
+text = "رقمي 0551234567. الخدمــــة ممتازة 😍."
+print(split_sentences(text, nlp))
+
+3-
+exit()
+"""
+
+
+####################################################################################################################################
+####################################################################################################################################
+
+
+#notebooks/01_tokenizer_audit.py
+"""Lab 1 starter: audit four tokenizer candidates on Bayan AR/EN text."""
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from transformers import AutoTokenizer
+
+
+CANDIDATES = {
+    "bert-base-multilingual-cased": "mBERT",
+    "xlm-roberta-base": "XLM-R",
+    "CAMeL-Lab/bert-base-arabic-camelbert-mix": "CAMeLBERT",
+    "distilbert-base-uncased": "DistilBERT",
+}
+
+DATA = Path("data/raw/bayan_feedback.csv")
+
+
+def fertility(tokenizer, texts) -> float:
+    words = 0
+    pieces = 0
+
+    for text in texts:
+        text = str(text)
+
+        words += len(text.split()) #"الخدمة ممتازة".split() >> ["الخدمة", "ممتازة"]
+        pieces += len(tokenizer.tokenize(text))
+
+    return pieces / max(words, 1) # because division by zero
+
+def main():
+    # 1) Load Bayan feedback corpus
+    corpus = pd.read_csv(DATA)
+
+    # 2) Split Arabic and English text
+    ar_texts = corpus[corpus["lang"] == "ar"]["text"].dropna().tolist()
+    en_texts = corpus[corpus["lang"] == "en"]["text"].dropna().tolist()
+
+    print(f"Arabic rows:  {len(ar_texts)}")
+    print(f"English rows: {len(en_texts)}")
+    print()
+
+    # 3) Audit every tokenizer
+    for checkpoint, label in CANDIDATES.items():
+        print("=" * 60)
+        print(label)
+        print(checkpoint)
+
+        tokenizer = AutoTokenizer.from_pretrained(checkpoint) #هنا Hugging Face ينزل tokenizer الخاص بالcheckpoint.#CAMeL-Lab/bert-base-arabic-camelbert-mix
+
+        # Fertility
+        ar_fertility = fertility(tokenizer, ar_texts)
+        en_fertility = fertility(tokenizer, en_texts)
+
+        # Sequence lengths 
+        #نحسب عدد التوكنز الناتجة لكل نص عربي من كل النصوص المدخلة، ونخزن هذه الأطوال في list.
+        ar_lengths = [
+            len(tokenizer.encode(text, add_special_tokens=True))
+            for text in ar_texts
+        ]
+
+        en_lengths = [
+            len(tokenizer.encode(text, add_special_tokens=True))
+            for text in en_texts
+        ]
+
+        # p95
+        #95% من النصوص العربية عندنا طولها 87 token أو أقل.
+        # إن reference لـCAMeLBERT العربي حوالي 87 tokens، وبالتالي حد 512 كبير ومريح.
+        ar_p95 = np.percentile(ar_lengths, 95)
+        en_p95 = np.percentile(en_lengths, 95)
+
+        print(f"AR fertility: {ar_fertility:.2f}")
+        print(f"EN fertility: {en_fertility:.2f}")
+        print(f"AR p95 length: {ar_p95:.0f} tokens")
+        print(f"EN p95 length: {en_p95:.0f} tokens")
+        print()
+
+
+if __name__ == "__main__":
+    main()
+    
+    
+
+
+"""
+output will be:
+Arabic rows:  7200
+English rows: 4800
+
+============================================================
+mBERT
+bert-base-multilingual-cased
+AR fertility: 2.15
+EN fertility: 1.51
+AR p95 length: 27 tokens
+EN p95 length: 25 tokens
+
+============================================================
+XLM-R
+xlm-roberta-base
+AR fertility: 1.67
+EN fertility: 1.43
+AR p95 length: 21 tokens
+EN p95 length: 23 tokens
+
+============================================================
+CAMeLBERT
+CAMeL-Lab/bert-base-arabic-camelbert-mix
+AR fertility: 1.41
+EN fertility: 2.70
+AR p95 length: 20 tokens
+EN p95 length: 38 tokens
+
+============================================================
+DistilBERT
+distilbert-base-uncased
+AR fertility: 4.53
+EN fertility: 1.30
+AR p95 length: 47 tokens
+EN p95 length: 21 tokens
+
+"""
+
+
+
