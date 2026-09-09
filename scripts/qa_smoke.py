@@ -1,5 +1,8 @@
 """Lab 3B: run the answerable and unanswerable QA smoke tests."""
 
+
+import re
+import string
 import json
 from pathlib import Path
 
@@ -53,6 +56,29 @@ def load_questions(path: Path):
                 })
 
     return examples
+
+
+def normalize_answer(text):
+    """Apply standard SQuAD-style normalization for exact matching."""
+
+    text = text.casefold()
+
+    # Remove punctuation
+    text = "".join(
+        character
+        for character in text
+        if character not in string.punctuation
+    )
+
+    # Remove common English articles
+    text = re.sub(
+        r"\b(a|an|the)\b",
+        " ",
+        text,
+    )
+
+    # Collapse repeated whitespace
+    return " ".join(text.split())
 
 
 def predict_answer(example, tokenizer, model, device):
@@ -203,8 +229,8 @@ def main():
 
         is_correct = (
             predicted_answer is not None
-            and predicted_answer.strip().casefold()
-            == expected_answer.strip().casefold()
+            and normalize_answer(predicted_answer)
+            == normalize_answer(expected_answer)
         )
 
         answerable_correct += int(is_correct)
