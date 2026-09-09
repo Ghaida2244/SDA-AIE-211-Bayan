@@ -24,7 +24,7 @@ from bayan.models.ner import align_labels
 CHECKPOINT = "xlm-roberta-base"
 
 # Use the supplied word-level CoNLL training dataset
-DATA_PATH = Path("data/models/bayan_ner.conll")
+DATA_PATH = Path("data/models/bayan_ner_segmented.conll")
 
 # Keep the limit above the measured sequence lengths
 MAX_LENGTH = 128
@@ -40,7 +40,7 @@ def parse_args():
 
     parser.add_argument(
         "--output-dir",
-        default="artifacts/ner",
+        default="artifacts/ner_segmented",
         help=(
             "Where to save the trained NER artefact "
             "(local path or mounted Drive path)."

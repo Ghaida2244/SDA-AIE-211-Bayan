@@ -401,7 +401,51 @@ Large trained model files were saved in Google Drive instead of GitHub.
 
 ---
 
-## Lab 4 — Dialect Audit
+## Lab 4 — Arabic Pipeline
 
-- Distribution:
-- One-sentence implication for MSA-only evaluation:
+### Dialect Audit
+
+The Bayan dataset contains `7200` Arabic examples.
+
+| Dialect region | Count | Percentage |
+|---|---:|---:|
+| Gulf | 4800 | 66.67% |
+| MSA | 2400 | 33.33% |
+
+Most of the Arabic data is Gulf dialect.
+
+Evaluating the model only on MSA would not give a fair result because it would ignore the language style used in around two-thirds of the Arabic data.
+
+### Arabic Normalization
+
+The `bayan_ar_v1` profile performs the following steps:
+
+- Removes tatweel.
+- Removes Arabic diacritics when requested.
+- Changes different Alef forms to `ا`.
+- Changes `ؤ` to `و`.
+- Changes `ئ` and `ى` to `ي`.
+- Changes `ة` to `ه`.
+- Removes extra spaces.
+
+The separate `display` profile keeps the original text more readable and only applies minimal Unicode and whitespace normalization.
+
+Arabic normalization tests:
+
+- `30/30 passed`
+
+### Clitic Segmentation
+
+- Segmentation method:
+- LOCATION recall before segmentation:
+- LOCATION recall after segmentation:
+- Recall difference:
+
+### Arabic Model Comparison
+
+- Models:
+- All-data result:
+- Gulf result:
+- MSA result:
+- Selected model:
+- Reason:
