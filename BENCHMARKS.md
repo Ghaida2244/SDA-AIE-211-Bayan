@@ -33,12 +33,16 @@
 - Unanswerable QA smoke result: `3/3` returned `answer=None`.
 - SQuAD-style answer normalization was used for fair exact-match evaluation.
 
-## Lab 4 — Arabic model bake-off
-| Checkpoint | macro-F1 all | Gulf | MSA | AR fertility |
+## Lab 4: Arabic model bake-off
+
+| Model | All macro-F1 | Gulf macro-F1 | MSA macro-F1 | Training time |
 |---|---:|---:|---:|---:|
-| multilingual incumbent | | | | |
-| Arabic dialect-aware | | | | |
-| optional third model | | | | |
+| CAMeLBERT-mix | 1.0000 | 1.0000 | 1.0000 | 102.60 seconds |
+| CAMeLBERT-DA | 1.0000 | 1.0000 | 1.0000 | 121.19 seconds |
+
+Both models achieved perfect macro-F1 on all test slices. CAMeLBERT-mix was selected because it produced the same performance in less training time and supports both MSA and dialectal Arabic.
+
+The expected four-point Gulf improvement could not be measured because both models reached the maximum score. This indicates a ceiling effect in the synthetic dataset.
 
 ## Lab 5 — Search
 | Configuration | recall@10 | MRR@10 | p50 latency/query |

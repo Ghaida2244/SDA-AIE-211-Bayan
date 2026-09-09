@@ -416,6 +416,26 @@ Most of the Arabic data is Gulf dialect.
 
 Evaluating the model only on MSA would not give a fair result because it would ignore the language style used in around two-thirds of the Arabic data.
 
+### Arabic model bake-off
+
+I compared CAMeLBERT-mix and CAMeLBERT-DA using the same Arabic topic dataset and training settings. The data was split by citizen group to prevent the same citizen from appearing in more than one split.
+
+The Arabic split contained:
+
+- 5,026 training examples
+- 1,077 validation examples
+- 1,097 test examples
+
+Both validation and test data contained Gulf and MSA examples.
+
+| Model | All macro-F1 | Gulf macro-F1 | MSA macro-F1 | Training time |
+|---|---:|---:|---:|---:|
+| CAMeLBERT-mix | 1.0000 | 1.0000 | 1.0000 | 102.60 seconds |
+| CAMeLBERT-DA | 1.0000 | 1.0000 | 1.0000 | 121.19 seconds |
+
+I selected CAMeLBERT-mix because it achieved the same results in less training time. The expected Gulf improvement was not visible because both models already achieved the maximum score. This is a ceiling effect caused by the simple synthetic dataset.
+
+
 ### Arabic Normalization
 
 The `bayan_ar_v1` profile performs the following steps:

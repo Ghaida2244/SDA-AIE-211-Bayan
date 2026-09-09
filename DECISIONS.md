@@ -8,11 +8,11 @@
 - Operational trade-off / rationale: XLM-R provides the best bilingual balance for Bayan. It has low fertility in both Arabic and English, balanced sequence lengths, and an Arabic unknown-token rate of 0.000. CAMeLBERT performs slightly better for Arabic but fragments English text more heavily, while DistilBERT performs poorly on Arabic.
 
 ## arabic-model
-- Incumbent:
-- Candidate:
-- All/Gulf/MSA evidence:
-- CI-backed verdict:
-- Segmentation contract:
+- Incumbent: CAMeLBERT-DA
+- Candidate: CAMeLBERT-mix
+- All/Gulf/MSA evidence: Both models achieved 1.0000 macro-F1 on the full Arabic test set, the Gulf slice, and the MSA slice. CAMeLBERT-mix trained in 102.60 seconds, compared with 121.19 seconds for CAMeLBERT-DA.
+- CI-backed verdict: No accuracy improvement could be established because both models reached the maximum score. CAMeLBERT-mix is selected based on equal slice performance and lower training time. This result is affected by a ceiling effect in the synthetic dataset.
+- Segmentation contract: Arabic clitics are segmented with CAMeL Tools using the D3 tokenization scheme. Segmentation must be applied consistently during training, evaluation, and serving. The segmented NER model achieved 1.0000 validation and frozen-test entity F1.
 
 ## search-min-score
 - Threshold:
