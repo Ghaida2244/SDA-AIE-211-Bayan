@@ -159,7 +159,9 @@ class CaseSearch:
         reranker_pairs = [
             (
                 normalized_query,
-                preprocess(case["case_text"]),
+                preprocess(
+                    f"{case['case_text']} {case['resolution']}"
+                         ),
             )
             for case in retrieved_cases
         ]

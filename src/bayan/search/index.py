@@ -39,10 +39,13 @@ def build_index(
     if dataframe.empty:
         raise ValueError("No cases are available for indexing")
 
-    # Apply the same preprocessing contract used by the other components
+   # Combine the case description and resolution for richer retrieval
     normalized_texts = [
-        preprocess(text)
-        for text in dataframe["case_text"].fillna("").astype(str)
+    preprocess(f"{case_text} {resolution}")
+    for case_text, resolution in zip(
+        dataframe["case_text"].fillna("").astype(str),
+        dataframe["resolution"].fillna("").astype(str),
+    )
     ]
 
     encoder = SentenceTransformer(model_name)
