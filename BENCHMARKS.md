@@ -19,7 +19,7 @@
 | TF-IDF + LinearSVC | macro-F1 | 0.7106 | 0.4699 | 0.1455 s |
 | Topic classifier (XLM-R) | macro-F1 | 1.0000 | 1.0000 | 276.79 s |
 | NER (XLM-R) | entity-F1 | 1.0000 | 1.0000 | 170.02 s |
-| QA | span/null smoke | | | |
+| QA (XLM-R SQuAD2) | span/null smoke | 9/9 answerable | 3/3 null | Pretrained |
 
 - Topic classifier validation improvement over baseline: `+0.2894` macro-F1.
 - Topic classifier frozen-test improvement over baseline: `+0.5301` macro-F1.
@@ -28,6 +28,10 @@
 - NER entity-level F1 target: `≥ 0.80`.
 - Achieved frozen-test entity-level F1: `1.0000`.
 - The trained NER artefact was saved to Google Drive.
+- QA checkpoint: `deepset/xlm-roberta-base-squad2`.
+- Answerable QA smoke result: `9/9` correct spans.
+- Unanswerable QA smoke result: `3/3` returned `answer=None`.
+- SQuAD-style answer normalization was used for fair exact-match evaluation.
 
 ## Lab 4 — Arabic model bake-off
 | Checkpoint | macro-F1 all | Gulf | MSA | AR fertility |
