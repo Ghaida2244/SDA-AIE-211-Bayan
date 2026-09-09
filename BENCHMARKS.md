@@ -44,12 +44,19 @@ Both models achieved perfect macro-F1 on all test slices. CAMeLBERT-mix was sele
 
 The expected four-point Gulf improvement could not be measured because both models reached the maximum score. This indicates a ceiling effect in the synthetic dataset.
 
-## Lab 5 — Search
-| Configuration | recall@10 | MRR@10 | p50 latency/query |
+## Lab 5: Bilingual semantic search
+
+| Stage | Recall@10 | MRR@10 | Average latency |
 |---|---:|---:|---:|
-| bi-encoder only | | | |
-| + cross-encoder rerank | | | |
-| cross-lingual slice | | | |
+| Bi-encoder | 0.0590 | 0.0605 | 13.80 ms |
+| Cross-encoder reranking | 0.0641 | 0.0590 | 58.49 ms |
+
+| Reranked slice | Recall@10 | MRR@10 |
+|---|---:|---:|
+| Arabic | 0.0722 | 0.0530 |
+| English | 0.0571 | 0.0641 |
+
+The tuned cosine threshold was 0.4586. It correctly returned an empty result for 20/20 no-answer queries while keeping all 130 answerable queries.
 
 - no-answer empty-correct: ___ / 20
 - cross-lingual gap: ___

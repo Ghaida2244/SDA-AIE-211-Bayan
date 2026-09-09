@@ -469,3 +469,15 @@ Arabic normalization tests:
 - MSA result:
 - Selected model:
 - Reason:
+
+
+
+## Lab 5
+
+I built a bilingual FAISS index with 1,050 evaluation cases. The vectors were L2-normalized and the manifest stored the encoder name, preprocessing version, vector count, and dimension.
+
+The bi-encoder achieved 0.0590 Recall@10 and 0.0605 MRR@10. Cross-encoder reranking increased Recall@10 to 0.0641 but reduced MRR@10 to 0.0590. It also increased average latency from 13.80 ms to 58.49 ms.
+
+The results did not reach the course targets. I kept the measured results instead of claiming an improvement. The likely limitations are repeated synthetic cases, incomplete relevance labels, and mismatch between the general multilingual models and the Bayan domain.
+
+A threshold of 0.4586 correctly rejected all 20 no-answer queries while retaining all 130 answerable queries.

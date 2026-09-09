@@ -30,3 +30,11 @@
 - Encoder/decoder rationale by task:
 - Multilingual vs Arabic-centric rationale:
 - Evidence used:
+
+
+## Search model
+- Bi-encoder: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+- Reranker: cross-encoder/mmarco-mMiniLMv2-L12-H384-v1
+- Decision: Keep the bi-encoder as the default retrieval stage. Reranking is optional because it slightly reduced MRR and added about 44.69 ms of average latency.
+- Empty-result threshold: 0.4586
+- Limitation: The measured retrieval quality did not reach the course targets.
