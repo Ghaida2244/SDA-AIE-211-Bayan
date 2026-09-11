@@ -2,7 +2,9 @@
 
 > Fill these tables from **your own runs**. Do not copy course reference numbers.
 
+
 ## Lab 1 — Tokenizer audit
+
 | Tokenizer | AR fertility | EN fertility | AR p95 len | EN p95 len | AR UNK rate |
 |---|---:|---:|---:|---:|---:|
 | mBERT | 2.15 | 1.51 | 27 | 25 | 0.005 |
@@ -11,74 +13,98 @@
 | DistilBERT | 4.53 | 1.30 | 47 | 21 | 0.002 |
 
 - Golden preprocessing: 25 / 25 passed
-- PII masking recall: 60  / 60 = 100%
+- PII masking recall: 60 / 60 = 100%
+- Selected tokenizer: XLM-R
+- Reason: XLM-R worked well for both Arabic and English and had a 0.000 Arabic UNK rate.
 
 ## Lab 3 — Models
+
 | Model | Metric | Validation | Frozen test | Train time |
 |---|---|---:|---:|---:|
-| TF-IDF + LinearSVC | macro-F1 | 0.7106 | 0.4699 | 0.1455 s |
-| Topic classifier (XLM-R) | macro-F1 | 1.0000 | 1.0000 | 276.79 s |
-| NER (XLM-R) | entity-F1 | 1.0000 | 1.0000 | 170.02 s |
-| QA (XLM-R SQuAD2) | span/null smoke | 9/9 answerable | 3/3 null | Pretrained |
+| TF-IDF + LinearSVC | macro-F1 | 0.7106 | 0.4699 | 0.15 seconds |
+| XLM-R topic classifier | macro-F1 | 1.0000 | 1.0000 | 276.79 seconds |
+| XLM-R NER | entity-F1 | 1.0000 | 1.0000 | 170.02 seconds |
+| QA | span/null smoke | 12 / 12 | 12 / 12 | Not trained |
 
-- Topic classifier validation improvement over baseline: `+0.2894` macro-F1.
-- Topic classifier frozen-test improvement over baseline: `+0.5301` macro-F1.
-- The required improvement threshold of `+0.08` was exceeded.
-- The trained classifier artefact was saved to Google Drive.
-- NER entity-level F1 target: `≥ 0.80`.
-- Achieved frozen-test entity-level F1: `1.0000`.
-- The trained NER artefact was saved to Google Drive.
-- QA checkpoint: `deepset/xlm-roberta-base-squad2`.
-- Answerable QA smoke result: `9/9` correct spans.
-- Unanswerable QA smoke result: `3/3` returned `answer=None`.
-- SQuAD-style answer normalization was used for fair exact-match evaluation.
+- The TF-IDF model was used as a simple baseline.
+- The XLM-R topic classifier achieved the best topic classification result.
+- The NER model correctly identified the entities in the test data.
+- The QA model passed 9 answerable examples and 3 no-answer examples.
 
-## Lab 4: Arabic model bake-off
+## Lab 4 — Arabic model bake-off
 
-| Model | All macro-F1 | Gulf macro-F1 | MSA macro-F1 | Training time |
+| Checkpoint | macro-F1 all | Gulf | MSA | AR fertility |
 |---|---:|---:|---:|---:|
-| CAMeLBERT-mix | 1.0000 | 1.0000 | 1.0000 | 102.60 seconds |
-| CAMeLBERT-DA | 1.0000 | 1.0000 | 1.0000 | 121.19 seconds |
+| CAMeLBERT-mix | 1.0000 | 1.0000 | 1.0000 | 1.41 |
+| CAMeLBERT-DA | 1.0000 | 1.0000 | 1.0000 | Not measured |
+| Optional third model | Not run | Not run | Not run | Not run |
 
-Both models achieved perfect macro-F1 on all test slices. CAMeLBERT-mix was selected because it produced the same performance in less training time and supports both MSA and dialectal Arabic.
+- CAMeLBERT-mix training time: 102.60 seconds
+- CAMeLBERT-DA training time: 121.19 seconds
+- Selected model: CAMeLBERT-mix
+- Reason: Both models had the same score, but CAMeLBERT-mix was faster.
+- The expected Gulf improvement was not found because both models reached the maximum score.
+- This result shows a ceiling effect in the synthetic dataset.
 
-The expected four-point Gulf improvement could not be measured because both models reached the maximum score. This indicates a ceiling effect in the synthetic dataset.
+### NER segmentation
 
-## Lab 5: Bilingual semantic search
-
-| Stage | Recall@10 | MRR@10 | Average latency |
+| Configuration | Validation entity-F1 | Frozen test entity-F1 | Train time |
 |---|---:|---:|---:|
-| Bi-encoder | 0.0590 | 0.0605 | 13.80 ms |
-| Cross-encoder reranking | 0.0641 | 0.0590 | 58.49 ms |
+| Without clitic segmentation | 1.0000 | 1.0000 | 170.02 seconds |
+| With clitic segmentation | 1.0000 | 1.0000 | 164.74 seconds |
 
-| Reranked slice | Recall@10 | MRR@10 |
-|---|---:|---:|
-| Arabic | 0.0722 | 0.0530 |
-| English | 0.0571 | 0.0641 |
+- CAMeL Tools D3 tokenization was used for Arabic clitic segmentation.
+- The score did not increase because the original model already had a perfect score.
+- The segmented model was slightly faster.
 
-The tuned cosine threshold was 0.4586. It correctly returned an empty result for 20/20 no-answer queries while keeping all 130 answerable queries.
+## Lab 5 — Search
 
-- no-answer empty-correct: ___ / 20
-- cross-lingual gap: ___
+| Configuration | recall@10 | MRR@10 | Average latency/query |
+|---|---:|---:|---:|
+| Bi-encoder only | 0.0590 | 0.0605 | 13.80 ms |
+| + cross-encoder rerank | 0.0641 | 0.0590 | 58.49 ms |
+| Arabic reranked slice | 0.0722 | 0.0530 | 65.39 ms |
+| English reranked slice | 0.0571 | 0.0641 | 52.57 ms |
+
+- No-answer empty-correct: 20 / 20
+- Empty-result threshold: 0.4586
+- Reranked recall cross-lingual gap: 0.0151
+- Reranking improved recall slightly but reduced MRR.
+- Reranking also increased the average latency.
+- The search results did not reach the course targets.
+- The measured results were kept without claiming an improvement.
 
 ## Lab 6 — Evaluation
+
 | Model | Aggregate macro-F1 [CI] | Gulf [CI] | Invariance pass | MFT pass |
 |---|---|---|---:|---:|
-| topic classifier | | | | |
-| dialect-aware | | | | |
+| Topic classifier | Not run | Not run | Not run | Not run |
+| Dialect-aware model | Not run | Not run | Not run | Not run |
 
-- paired comparison verdict:
-- error taxonomy top categories:
-- top-3 prioritised fixes:
+- Step 1 completed: bootstrap confidence interval was implemented.
+- Paired bootstrap difference was also implemented.
+- All 6 bootstrap tests passed.
+- Paired comparison verdict: Not run because only Step 1 was required.
+- Error taxonomy top categories: Not completed.
+- Top-3 prioritised fixes: Not completed.
 
 ## Lab 7 — Optimisation ladder
-| Rung | p50 | p99 | quality metric / paired Δ | Artefact size |
-|---|---:|---:|---|---:|
-| fp32 torch @512 padded | | | | |
-| fp32 torch @128 dynamic | | | | |
-| ONNX fp32 @128 | | | | |
-| ONNX INT8 @128 | | | | |
 
-- HTTP p99, 16 concurrent:
-- classifier quantisation decision:
-- NER quantisation decision:
+| Rung | p50 | p99 | Quality metric / paired Δ | Artefact size |
+|---|---:|---:|---|---:|
+| PyTorch fixed padding @128 | 8.95 ms | 13.48 ms | Not measured | Not measured |
+| PyTorch dynamic padding @128 | 6.62 ms | 11.44 ms | Not measured | Not measured |
+| PyTorch dynamic padding @22 | 6.84 ms | 11.63 ms | Not measured | Not measured |
+| ONNX fp32 @128 | Not run | Not run | Not run | Not run |
+| ONNX INT8 @128 | Not run | Not run | Not run | Not run |
+
+- Device: Tesla T4 GPU
+- Number of benchmark examples: 500
+- Recommended p95 length: 22 tokens
+- Selected configuration: PyTorch dynamic padding with max length 128
+- Dynamic padding reduced p50 latency by about 26%.
+- Dynamic padding reduced p99 latency by about 15%.
+- Reducing max length to 22 did not improve the speed in this run.
+- HTTP p99 with 16 concurrent users: Not run
+- Classifier quantisation decision: Not completed
+- NER quantisation decision: Not completed
